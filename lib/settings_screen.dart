@@ -47,7 +47,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
     setState(() {
       _themeMode = mode;
       _nickController.text = storedNick;
-      themeNotifier.value = _themeMode;
+      themeNotifier.value = _themeMode;  // <-- топ-левел
     });
   }
 
@@ -70,7 +70,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
     super.dispose();
   }
 
-  /// Показывает диалог выбора метода импорта библиотеки
+  /// Диалог выбора метода импорта библиотеки
   void _showImportOptions() {
     showDialog(
       context: context,
@@ -130,34 +130,28 @@ class _SettingsScreenState extends State<SettingsScreen> {
             title: const Text('Светлая'),
             value: ThemeMode.light,
             groupValue: _themeMode,
-            onChanged: (v) {
-              setState(() {
-                _themeMode = v!;
-                themeNotifier.value = _themeMode;
-              });
-            },
+            onChanged: (v) => setState(() {
+              _themeMode = v!;
+              themeNotifier.value = _themeMode;
+            }),
           ),
           RadioListTile<ThemeMode>(
             title: const Text('Тёмная'),
             value: ThemeMode.dark,
             groupValue: _themeMode,
-            onChanged: (v) {
-              setState(() {
-                _themeMode = v!;
-                themeNotifier.value = _themeMode;
-              });
-            },
+            onChanged: (v) => setState(() {
+              _themeMode = v!;
+              themeNotifier.value = _themeMode;
+            }),
           ),
           RadioListTile<ThemeMode>(
             title: const Text('Системная'),
             value: ThemeMode.system,
             groupValue: _themeMode,
-            onChanged: (v) {
-              setState(() {
-                _themeMode = v!;
-                themeNotifier.value = _themeMode;
-              });
-            },
+            onChanged: (v) => setState(() {
+              _themeMode = v!;
+              themeNotifier.value = _themeMode;
+            }),
           ),
           const Divider(),
 
@@ -172,7 +166,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
           const SizedBox(height: 16),
           const Divider(),
 
-          // Импорт библиотеки Steam (с двумя вариантами)
+          // Импорт библиотеки Steam
           ListTile(
             leading: const Icon(Icons.import_contacts),
             title: const Text('Импорт библиотеки Steam'),
@@ -195,16 +189,14 @@ class _SettingsScreenState extends State<SettingsScreen> {
           ),
           const Divider(),
 
-          // Настройка устройств
+          // Выбор устройств
           ListTile(
             leading: const Icon(Icons.devices),
             title: const Text('Настройка устройств'),
             onTap: () {
               Navigator.push(
                 context,
-                MaterialPageRoute(
-                  builder: (_) => DeviceSettingsScreen(),
-                ),
+                MaterialPageRoute(builder: (_) => const DeviceSettingsScreen()),
               );
             },
           ),
@@ -214,9 +206,11 @@ class _SettingsScreenState extends State<SettingsScreen> {
   }
 }
 
-/// Экран выбора устройств (сохранённые в SharedPreferences)
+/// Экран выбора устройств
 class DeviceSettingsScreen extends StatelessWidget {
   static const prefsKey = 'selectedDevices';
+
+  const DeviceSettingsScreen({Key? key}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
@@ -230,15 +224,13 @@ class DeviceSettingsScreen extends StatelessWidget {
           }
           final devices = snap.data ?? [];
           return ListView(
-            children: devices.map((d) {
-              return CheckboxListTile(
-                value: true, // здесь логику отметки реализуйте по своему
-                title: Text(d),
-                onChanged: (v) {
-                  // сохранить изменения
-                },
-              );
-            }).toList(),
+            children: devices
+                .map((d) => CheckboxListTile(
+              value: true,
+              title: Text(d),
+              onChanged: (_) {},
+            ))
+                .toList(),
           );
         },
       ),

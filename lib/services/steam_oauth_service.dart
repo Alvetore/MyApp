@@ -1,76 +1,65 @@
 // lib/services/steam_oauth_service.dart
-
 import 'dart:convert';
 import 'package:http/http.dart' as http;
-import 'package:openid_client/openid_client_io.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../config.dart';
+import 'steam_models.dart';
 
+/// Сервис для логина через Steam OpenID и получения списка игр
 class SteamOAuthService {
-  final _apiKey   = STEAM_API_KEY;
-  final _clientId = STEAM_CLIENT_ID;
+  final String _apiKey = Config.steamApiKey;
+  final String _redirectUri = Config.steamRedirectUri;
 
-  /// OpenID-логин в Steam, возвращает SteamID64
+  /// Запускает браузер для OpenID авторизации Steam и возвращает steamID64
   Future<String> signInWithSteam() async {
-    final issuer = await Issuer.discover(
-        Uri.parse('https://steamcommunity.com/openid')
-    );
-    final client = Client(issuer, _clientId);
-
-    final authenticator = Authenticator(
-      client,
-      port: 4000,
-      urlLancher: (url) async {
-        final uri = Uri.parse(url.toString());
-        if (!await launchUrl(uri, mode: LaunchMode.externalApplication)) {
-          throw 'Не удалось открыть браузер';
-        }
-      },
-      scopes: ['openid'],
-      redirectUri: Uri.parse(_clientId),
-    );
-
-    // ждем перенаправления на localhost:4000
-    final credential = await authenticator.authorize();
-    final tokenResponse = await credential.getTokenResponse();
-    final rawIdToken = tokenResponse.idToken?.raw;
-    if (rawIdToken == null) {
-      throw 'Не получили id_token';
+    final params = {
+      'openid.ns': 'http://specs.openid.net/auth/2.0',
+      'openid.mode': 'checkid_setup',
+      'openid.return_to': _redirectUri,
+      'openid.realm': _redirectUri,
+      'openid.identity': 'http://specs.openid.net/auth/2.0/identifier_select',
+      'openid.claimed_id': 'http://specs.openid.net/auth/2.0/identifier_select',
+    };
+    final uri = Uri.https('steamcommunity.com', '/openid/login', params);
+    if (!await launchUrl(uri, mode: LaunchMode.externalApplication)) {
+      throw 'Не удалось открыть браузер для авторизации в Steam';
     }
-    return _extractSteamIdFromJwt(rawIdToken);
+
+    // *** ВАЖНО *** здесь нужно перехватить ваш deep link (redirect URI) и получить полный URL
+    final fullUrl = await _listenForRedirect();
+    final returned = Uri.parse(fullUrl);
+    final claimedId = returned.queryParameters['openid.claimed_id'];
+    if (claimedId == null) throw 'Не удалось получить SteamID';
+    return claimedId.split('/').last;
   }
 
-  /// Получает «сырые» игры пользователя из Steam Web API
-  Future<List<Map<String, dynamic>>> fetchOwnedGames(String steamId) async {
-    final uri = Uri.parse(
-        'https://api.steampowered.com/IPlayerService/GetOwnedGames/v1/'
-            '?key=$_apiKey'
-            '&steamid=$steamId'
-            '&include_appinfo=true'
+  /// Заглушка для примера — вы должны реализовать deep link handler
+  Future<String> _listenForRedirect() async {
+    // TODO: используйте uni_links или аналог, чтобы получить URL, на который вернулся пользователь
+    throw 'Deep link listener не настроен';
+  }
+
+  /// Через Web API Steam возвращает список игр
+  Future<List<GameRecord>> fetchOwnedGames(String steamId) async {
+    final uri = Uri.https(
+      'api.steampowered.com',
+      '/IPlayerService/GetOwnedGames/v1/',
+      {
+        'key': _apiKey,
+        'steamid': steamId,
+        'include_appinfo': 'true',
+        'include_played_free_games': 'true',
+      },
     );
     final res = await http.get(uri);
     if (res.statusCode != 200) {
-      throw 'Ошибка при загрузке списка игр: ${res.statusCode}';
+      throw 'Ошибка при запросе owned games: ${res.statusCode}';
     }
-    final data = json.decode(res.body)['response'] as Map<String, dynamic>;
-    final games = (data['games'] as List)
-        .map((g) => {
-      'appid': g['appid'],
-      'name':  g['name'],
-    })
+    final body = jsonDecode(res.body)['response'] as Map<String, dynamic>;
+    final rawGames = body['games'] as List<dynamic>? ?? [];
+    return rawGames
+        .cast<Map<String, dynamic>>()
+        .map((g) => GameRecord.fromSteamApi(g))
         .toList();
-    return games;
-  }
-
-  String _extractSteamIdFromJwt(String jwt) {
-    final parts = jwt.split('.');
-    if (parts.length != 3) throw 'Неверный JWT';
-    final payload = parts[1];
-    final normalized = base64Url.normalize(payload);
-    final decoded = utf8.decode(base64Url.decode(normalized));
-    final map = json.decode(decoded) as Map<String, dynamic>;
-    final claimed = map['openid.claimed_id'] as String?;
-    if (claimed == null) throw 'openid.claimed_id не найден';
-    return claimed.split('/').last;
   }
 }
