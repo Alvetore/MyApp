@@ -9,3 +9,7 @@ const String measurementsCsvUrl = 'https://docs.google.com/spreadsheets/d/e/2PAC
 
 /// Уведомитель темы приложения. Изменяя значение, перерисовываем MaterialApp.
 final ValueNotifier<ThemeMode> themeNotifier = ValueNotifier(ThemeMode.dark);
+
+/// Ниже — наши новые константы для Steam OAuth
+const String STEAM_API_KEY = '9FB2EFFAE6EE04A1B7A82D7BA8581D69';
+const String STEAM_CLIENT_ID = 'http://mysteamdeckapp.us.kg:4000/';
