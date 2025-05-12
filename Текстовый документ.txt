@@ -1,0 +1,10 @@
+# Flutter/Dart
+.dart_tool/
+.packages
+build/
+ios/Pods/
+*.iml
+.idea/
+.vscode/
+pubspec.lock
+# и т.д.
