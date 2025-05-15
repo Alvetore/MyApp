@@ -1,12 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'import_profile_screen.dart';
 import 'config.dart';
 import 'services/sheet_service.dart';
 
-/// Экран «Настройки» приложения
-/// Включает настройку темы, ника пользователя, импорт библиотеки,
-/// очистку кэша и выбор устройств.
 class SettingsScreen extends StatefulWidget {
   const SettingsScreen({Key? key}) : super(key: key);
 
@@ -52,14 +50,11 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
   Future<void> _saveSettings() async {
     final prefs = await SharedPreferences.getInstance();
-    await prefs.setString(
-      _themeKey,
-      _themeMode.toString().split('.').last,
-    );
+    await prefs.setString(_themeKey, _themeMode.toString().split('.').last);
     await prefs.setString(_nickKey, _nickController.text.trim());
     if (!mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Настройки сохранены')),
+      SnackBar(content: Text(AppLocalizations.of(context)!.save_done)),
     );
   }
 
@@ -69,28 +64,53 @@ class _SettingsScreenState extends State<SettingsScreen> {
     super.dispose();
   }
 
+  void _showImportOptions() {
+    showDialog(
+      context: context,
+      builder: (context) => SimpleDialog(
+        title: Text(AppLocalizations.of(context)!.import_steam),
+        children: [
+          SimpleDialogOption(
+            child: Text(AppLocalizations.of(context)!.import_by_url),
+            onPressed: () {
+              Navigator.pop(context);
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (_) => const ImportProfileScreen(),
+                ),
+              );
+            },
+          ),
+          // Если нужно добавить другие методы импорта, добавить тут
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
+    final loc = AppLocalizations.of(context)!;
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Настройки'),
+        title: Text(loc.settings_title),
         actions: [
           IconButton(
             icon: const Icon(Icons.save),
             onPressed: _saveSettings,
-            tooltip: 'Сохранить настройки',
+            tooltip: loc.save,
           ),
         ],
       ),
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: [
-          const Text(
-            'Тема приложения',
-            style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+          Text(
+            loc.theme,
+            style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
           ),
           RadioListTile<ThemeMode>(
-            title: const Text('Светлая'),
+            title: Text(loc.theme_light),
             value: ThemeMode.light,
             groupValue: _themeMode,
             onChanged: (v) {
@@ -101,7 +121,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
             },
           ),
           RadioListTile<ThemeMode>(
-            title: const Text('Тёмная'),
+            title: Text(loc.theme_dark),
             value: ThemeMode.dark,
             groupValue: _themeMode,
             onChanged: (v) {
@@ -112,7 +132,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
             },
           ),
           RadioListTile<ThemeMode>(
-            title: const Text('Системная'),
+            title: Text(loc.theme_system),
             value: ThemeMode.system,
             groupValue: _themeMode,
             onChanged: (v) {
@@ -127,39 +147,32 @@ class _SettingsScreenState extends State<SettingsScreen> {
           // Ник пользователя
           TextField(
             controller: _nickController,
-            decoration: const InputDecoration(
-              labelText: 'Ник пользователя',
-              helperText: 'Будет использоваться при отправке замеров',
+            decoration: InputDecoration(
+              labelText: loc.user_nick,
+              helperText: loc.user_nick,
             ),
           ),
           const SizedBox(height: 16),
           const Divider(),
 
-          // Импорт библиотеки Steam (один вариант)
+          // Импорт библиотеки Steam (выбор метода)
           ListTile(
             leading: const Icon(Icons.import_contacts),
-            title: const Text('Импорт библиотеки Steam'),
-            onTap: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (_) => const ImportProfileScreen(),
-                ),
-              );
-            },
+            title: Text(loc.import_steam),
+            onTap: _showImportOptions,
           ),
           const Divider(),
 
           // Очистка кэша
           ListTile(
             leading: const Icon(Icons.delete),
-            title: const Text('Очистить кэш'),
+            title: Text(loc.cache_clear),
             onTap: () async {
               final prefs = await SharedPreferences.getInstance();
               await prefs.clear();
               if (!mounted) return;
               ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Кэш очищен')),
+                SnackBar(content: Text(loc.cache_cleared)),
               );
             },
           ),
@@ -168,7 +181,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
           // Настройка устройств
           ListTile(
             leading: const Icon(Icons.devices),
-            title: const Text('Настройка устройств'),
+            title: Text(loc.device_settings),
             onTap: () {
               Navigator.push(
                 context,
@@ -184,14 +197,16 @@ class _SettingsScreenState extends State<SettingsScreen> {
   }
 }
 
-/// Экран выбора устройств (сохранённые в SharedPreferences)
+// DeviceSettingsScreen — тут аналогично меняются тексты на локализованные
+
 class DeviceSettingsScreen extends StatelessWidget {
   static const prefsKey = 'selectedDevices';
 
   @override
   Widget build(BuildContext context) {
+    final loc = AppLocalizations.of(context)!;
     return Scaffold(
-      appBar: AppBar(title: const Text('Настройка устройств')),
+      appBar: AppBar(title: Text(loc.device_settings)),
       body: FutureBuilder<List<String>>(
         future: SheetService().fetchDevices(),
         builder: (context, snap) {
