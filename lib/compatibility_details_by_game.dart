@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'services/sheet_service.dart';
 import 'measurement_form.dart';
+import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 
 /// Экран подробностей по игре: группы замеров по устройствам и профилям
 class CompatibilityDetailsByGame extends StatefulWidget {
@@ -66,21 +67,23 @@ class _CompatibilityDetailsByGameState extends State<CompatibilityDetailsByGame>
 
   @override
   Widget build(BuildContext context) {
+    final loc = AppLocalizations.of(context)!;
+
     return Scaffold(
       appBar: AppBar(title: Text(widget.gameName)),
-      body: _buildBody(),
+      body: _buildBody(loc),
       floatingActionButton: FloatingActionButton(
-        tooltip: 'Новый замер',
+        tooltip: loc.addMeasurementTooltip,
         child: const Icon(Icons.add),
         onPressed: _onAddMeasurement,
       ),
     );
   }
 
-  Widget _buildBody() {
+  Widget _buildBody(AppLocalizations loc) {
     if (_loading) return const Center(child: CircularProgressIndicator());
-    if (_error != null) return Center(child: Text('Ошибка: $_error'));
-    if (_data.isEmpty) return const Center(child: Text('Нет данных для этой игре'));
+    if (_error != null) return Center(child: Text('${loc.errorPrefix}: $_error'));
+    if (_data.isEmpty) return Center(child: Text(loc.noMeasurementsForGame));
 
     return RefreshIndicator(
       onRefresh: _loadData,
@@ -97,8 +100,10 @@ class _CompatibilityDetailsByGameState extends State<CompatibilityDetailsByGame>
               final count = list.length;
               final avgFps = list.map((e) => e.fps).reduce((a, b) => a + b) / count;
               return ListTile(
-                title: Text('$profile — ${avgFps.toStringAsFixed(1)} FPS'),
-                subtitle: Text('$count замеров'),
+                title: Text('$profile — ${avgFps.toStringAsFixed(1)} ${loc.fps}'),
+                subtitle: Text(
+                    loc.measurementsCount(count)
+                ),
                 onTap: () {
                   Navigator.push(
                     context,
@@ -161,8 +166,9 @@ class ProfileDetailsScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final loc = AppLocalizations.of(context)!;
     return Scaffold(
-      appBar: AppBar(title: Text('Замеры: $profile')),
+      appBar: AppBar(title: Text('${loc.measurements}: $profile')),
       body: ListView.builder(
         itemCount: records.length,
         itemBuilder: (_, i) {
@@ -170,14 +176,14 @@ class ProfileDetailsScreen extends StatelessWidget {
           return Card(
             margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
             child: ListTile(
-              title: Text('${r.fps.toStringAsFixed(1)} FPS'),
+              title: Text('${r.fps.toStringAsFixed(1)} ${loc.fps}'),
               subtitle: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text('Устройство: ${r.device}'),
-                  Text('Пользователь: ${r.submittedBy}'),
+                  Text('${loc.device}: ${r.device}'),
+                  Text('${loc.user}: ${r.submittedBy}'),
                   const SizedBox(height: 4),
-                  Text('Комментарий: ${r.comment}'),
+                  Text('${loc.comment}: ${r.comment.isNotEmpty ? r.comment : loc.noComment}'),
                 ],
               ),
             ),

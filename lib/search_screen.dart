@@ -1,8 +1,11 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
-import 'services/steamdb_service.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 import 'compatibility_details_by_game.dart';
+import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 
-/// Экран поиска любой игры по Steam
+/// Экран поиска по библиотеке игр пользователя.
 class SearchScreen extends StatefulWidget {
   const SearchScreen({Key? key}) : super(key: key);
 
@@ -11,67 +14,110 @@ class SearchScreen extends StatefulWidget {
 }
 
 class _SearchScreenState extends State<SearchScreen> {
-  final _ctrl = TextEditingController();
-  final _steamDb = SteamDbService();
-  List<Map<String, String>> _suggestions = [];
-  bool _loading = false;
-  String? _error;
+  final TextEditingController _searchCtrl = TextEditingController();
+  List<Map<String, String>> _games = [];
+  List<Map<String, String>> _filtered = [];
+  bool _sortAsc = true;
 
-  void _onChanged(String query) async {
-    if (query.length < 3) {
-      setState(() => _suggestions = []);
-      return;
+  @override
+  void initState() {
+    super.initState();
+    _loadSaved();
+  }
+
+  Future<void> _loadSaved() async {
+    final prefs = await SharedPreferences.getInstance();
+    final saved = prefs.getString('importedGames');
+    if (saved != null && saved.isNotEmpty) {
+      final list = List<dynamic>.from(jsonDecode(saved));
+      _games = list.map((e) => Map<String, String>.from(e)).toList();
+      _applyFilter();
     }
-    setState(() {
-      _loading = true;
-      _error = null;
+    setState(() {});
+  }
+
+  void _applyFilter() {
+    final q = _searchCtrl.text.toLowerCase();
+    _filtered = _games
+        .where((g) => g['name']!.toLowerCase().contains(q))
+        .toList();
+    _filtered.sort((a, b) {
+      final cmp = a['name']!.compareTo(b['name']!);
+      return _sortAsc ? cmp : -cmp;
     });
-    try {
-      final results = await _steamDb.searchGames(query);
-      setState(() => _suggestions = results);
-    } catch (e) {
-      setState(() => _error = e.toString());
-    } finally {
-      setState(() => _loading = false);
-    }
   }
 
   @override
   Widget build(BuildContext context) {
+    final loc = AppLocalizations.of(context)!;
+
+    if (_games.isEmpty) {
+      return Scaffold(
+        appBar: AppBar(title: Text(loc.searchTitle)),
+        body: Center(
+          child: Text(loc.noGamesImported),
+        ),
+      );
+    }
+
     return Scaffold(
-      appBar: AppBar(title: const Text('Поиск игр')),
+      appBar: AppBar(title: Text(loc.searchTitle)),
       body: Padding(
         padding: const EdgeInsets.all(12),
         child: Column(
           children: [
+            // Поиск по названию игры
             TextField(
-              controller: _ctrl,
-              decoration: const InputDecoration(
-                labelText: 'Введите название игры',
-                prefixIcon: Icon(Icons.search),
+              controller: _searchCtrl,
+              decoration: InputDecoration(
+                labelText: loc.searchGame,
+                prefixIcon: const Icon(Icons.search),
               ),
-              onChanged: _onChanged,
+              onChanged: (_) => setState(_applyFilter),
             ),
-            if (_loading) const LinearProgressIndicator(),
-            if (_error != null) Padding(
-              padding: const EdgeInsets.symmetric(vertical: 8),
-              child: Text('Ошибка: $_error', style: const TextStyle(color: Colors.red)),
+            const SizedBox(height: 12),
+            // Сортировка
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(loc.sorting),
+                IconButton(
+                  icon: Icon(_sortAsc ? Icons.arrow_upward : Icons.arrow_downward),
+                  onPressed: () => setState(() {
+                    _sortAsc = !_sortAsc;
+                    _applyFilter();
+                  }),
+                ),
+              ],
             ),
+            const SizedBox(height: 4),
+            // Список игр
             Expanded(
               child: ListView.builder(
-                itemCount: _suggestions.length,
+                itemCount: _filtered.length,
                 itemBuilder: (_, i) {
-                  final item = _suggestions[i];
+                  final game = _filtered[i];
+                  final name = game['name']!;
+                  final appid = game['appid']!;
+                  final iconUrl =
+                      'https://shared.fastly.steamstatic.com/store_item_assets/steam/apps/$appid/header.jpg';
                   return ListTile(
-                    title: Text(item['name']!),
-                    subtitle: Text('SteamID: ${item['id']}'),
+                    leading: CachedNetworkImage(
+                      imageUrl: iconUrl,
+                      width: 50,
+                      height: 50,
+                      placeholder: (_, __) => const Icon(Icons.hourglass_empty),
+                      errorWidget: (_, __, ___) => const Icon(Icons.broken_image),
+                    ),
+                    title: Text(name),
+                    subtitle: Text('${loc.steamId}: $appid'),
                     onTap: () {
                       Navigator.push(
                         context,
                         MaterialPageRoute(
                           builder: (_) => CompatibilityDetailsByGame(
-                            steamId: item['id']!,
-                            gameName: item['name']!,
+                            steamId: appid,
+                            gameName: name,
                           ),
                         ),
                       );

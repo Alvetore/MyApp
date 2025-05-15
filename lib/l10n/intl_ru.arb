@@ -38,5 +38,20 @@
   "searchGame": "Поиск игры",
   "sorting": "Сортировка",
   "sortOrder": "Порядок сортировки",
-  "steamIdLabel": "SteamID"
+  "steamIdLabel": "SteamID",
+  "searchTitle": "Поиск",
+  "noGamesImported": "Библиотека не импортирована.",
+  "searchGame": "Поиск игры",
+  "sorting": "Сортировка",
+  "steamId": "SteamID",
+  "errorPrefix": "Ошибка",
+  "noMeasurementsForGame": "Нет данных для этой игры",
+  "addMeasurementTooltip": "Новый замер",
+  "measurements": "Замеры",
+  "fps": "FPS",
+  "device": "Устройство",
+  "user": "Пользователь",
+  "comment": "Комментарий",
+  "noComment": "Без комментариев",
+  "measurementsCount": "{count, plural, =1{1 замер} few{{count} замера} many{{count} замеров} other{{count} замера}}"
 }
