@@ -1,0 +1,20 @@
+{
+  "@@locale": "ru",
+  "settings_title": "Настройки",
+  "import_steam": "Импорт библиотеки Steam",
+  "import_by_url": "По ссылке на профиль Steam",
+  "import_by_login": "Войти через Steam",
+  "theme": "Тема приложения",
+  "theme_light": "Светлая",
+  "theme_dark": "Тёмная",
+  "theme_system": "Системная",
+  "user_nick": "Ник пользователя",
+  "cache_clear": "Очистить кэш",
+  "cache_cleared": "Кэш очищен",
+  "save": "Сохранить",
+  "save_done": "Настройки сохранены",
+  "device_settings": "Настройка устройств",
+  "import_done": "Импорт завершён",
+  "games_imported": "Импортировано игр: {count}",
+  "last_import": "Последний импорт: {date}"
+}

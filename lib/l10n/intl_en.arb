@@ -1,0 +1,20 @@
+{
+  "@@locale": "en",
+  "settings_title": "Settings",
+  "import_steam": "Import Steam Library",
+  "import_by_url": "Import by Steam profile link",
+  "import_by_login": "Sign in with Steam",
+  "theme": "App Theme",
+  "theme_light": "Light",
+  "theme_dark": "Dark",
+  "theme_system": "System",
+  "user_nick": "User Nickname",
+  "cache_clear": "Clear cache",
+  "cache_cleared": "Cache cleared",
+  "save": "Save",
+  "save_done": "Settings saved",
+  "device_settings": "Device settings",
+  "import_done": "Import complete",
+  "games_imported": "Games imported: {count}",
+  "last_import": "Last import: {date}"
+}

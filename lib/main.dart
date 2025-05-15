@@ -3,6 +3,8 @@ import 'config.dart';
 import 'library_import_screen.dart';
 import 'search_screen.dart';
 import 'settings_screen.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
+import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 
 void main() => runApp(const MyApp());
 
@@ -15,7 +17,7 @@ class MyApp extends StatelessWidget {
       valueListenable: themeNotifier,
       builder: (_, themeMode, __) {
         return MaterialApp(
-          title: 'DeckFilter Clone',
+          title: 'MyApp',
           theme: ThemeData(
             brightness: Brightness.light,
             colorScheme: ColorScheme.fromSeed(seedColor: Colors.blue),
@@ -27,6 +29,16 @@ class MyApp extends StatelessWidget {
               brightness: Brightness.dark,
             ),
           ),
+          localizationsDelegates: const [
+            AppLocalizations.delegate,
+            GlobalMaterialLocalizations.delegate,
+            GlobalWidgetsLocalizations.delegate,
+            GlobalCupertinoLocalizations.delegate,
+          ],
+          supportedLocales: const [
+            Locale('en', ''),
+            Locale('ru', ''),
+          ],
           themeMode: themeMode,
           home: const HomePage(),
         );

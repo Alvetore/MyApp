@@ -15,12 +15,38 @@ class _ImportProfileScreenState extends State<ImportProfileScreen> {
   final TextEditingController _profileCtrl = TextEditingController();
   bool _loading = false;
   String? _error;
+  int? _importedCount;
+  int? _oldCount;
+
+  static const _prefsKey = 'lastImportedSteamProfile';
+
+  @override
+  void initState() {
+    super.initState();
+    _loadLastProfile();
+  }
+
+  Future<void> _loadLastProfile() async {
+    final prefs = await SharedPreferences.getInstance();
+    final last = prefs.getString(_prefsKey) ?? '';
+    setState(() {
+      _profileCtrl.text = last;
+    });
+  }
 
   Future<void> _import() async {
     setState(() { _loading = true; _error = null; });
     try {
       final input = _profileCtrl.text.trim();
       if (input.isEmpty) throw 'Введите vanity, URL или SteamID64';
+
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString(_prefsKey, input);
+
+      // Получаем старое количество игр (если есть)
+      final oldGamesJson = prefs.getString('importedGames');
+      _oldCount = oldGamesJson != null ? (jsonDecode(oldGamesJson) as List).length : 0;
+
       final url = input.contains('steamcommunity.com')
           ? input
           : (int.tryParse(input) != null
@@ -39,9 +65,17 @@ class _ImportProfileScreenState extends State<ImportProfileScreen> {
         'name': g.findElements('name').first.text,
         'appid': g.findElements('appID').first.text,
       }).toList();
-      final prefs = await SharedPreferences.getInstance();
       await prefs.setString('importedGames', jsonEncode(parsed));
+      _importedCount = parsed.length;
+
       if (!mounted) return;
+
+      // Показываем SnackBar с количеством импортированных игр
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Импорт завершён: $_importedCount игр (было $_oldCount)'),
+        ),
+      );
       Navigator.pop(context, true);
     } catch (e) {
       setState(() { _error = e.toString(); });
