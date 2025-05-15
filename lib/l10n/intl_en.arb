@@ -31,5 +31,12 @@
   "measurement_steamid": "SteamID",
   "measurement_profile": "Settings profile",
   "measurement_fps": "FPS",
-  "measurement_comment": "Comment"
+  "measurement_comment": "Comment",
+  "libraryTitle": "My Library",
+  "libraryNotImported": "Library not imported",
+  "importInSettings": "Import in settings",
+  "searchGame": "Search game",
+  "sorting": "Sorting",
+  "sortOrder": "Sort order",
+  "steamIdLabel": "SteamID"
 }

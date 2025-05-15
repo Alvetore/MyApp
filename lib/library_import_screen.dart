@@ -4,6 +4,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'compatibility_details_by_game.dart';
 import 'settings_screen.dart';
+import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 
 /// Экран просмотра библиотеки игр.
 /// Если библиотека не импортирована, предлагает перейти в настройки.
@@ -50,14 +51,16 @@ class _LibraryImportScreenState extends State<LibraryImportScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final loc = AppLocalizations.of(context)!;
+
     if (_games.isEmpty) {
       return Scaffold(
-        appBar: AppBar(title: const Text('Моя библиотека')),
+        appBar: AppBar(title: Text(loc.libraryTitle)),
         body: Center(
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              const Text('Библиотека не импортирована'),
+              Text(loc.libraryNotImported),
               const SizedBox(height: 8),
               ElevatedButton(
                 onPressed: () {
@@ -66,7 +69,7 @@ class _LibraryImportScreenState extends State<LibraryImportScreen> {
                     MaterialPageRoute(builder: (_) => const SettingsScreen()),
                   );
                 },
-                child: const Text('Импортировать в настройках'),
+                child: Text(loc.importInSettings),
               ),
             ],
           ),
@@ -75,7 +78,7 @@ class _LibraryImportScreenState extends State<LibraryImportScreen> {
     }
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Моя библиотека')),
+      appBar: AppBar(title: Text(loc.libraryTitle)),
       body: Padding(
         padding: const EdgeInsets.all(12),
         child: Column(
@@ -83,9 +86,9 @@ class _LibraryImportScreenState extends State<LibraryImportScreen> {
             // Поиск по названиям
             TextField(
               controller: _searchCtrl,
-              decoration: const InputDecoration(
-                labelText: 'Поиск игры',
-                prefixIcon: Icon(Icons.search),
+              decoration: InputDecoration(
+                labelText: loc.searchGame,
+                prefixIcon: const Icon(Icons.search),
               ),
               onChanged: (_) => setState(_applyFilter),
             ),
@@ -94,18 +97,19 @@ class _LibraryImportScreenState extends State<LibraryImportScreen> {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                const Text('Сортировка'),
+                Text(loc.sorting),
                 IconButton(
                   icon: Icon(_sortAsc ? Icons.arrow_upward : Icons.arrow_downward),
                   onPressed: () => setState(() {
                     _sortAsc = !_sortAsc;
                     _applyFilter();
                   }),
+                  tooltip: loc.sortOrder,
                 ),
               ],
             ),
             const SizedBox(height: 4),
-            // Список игр без запроса устройства
+            // Список игр
             Expanded(
               child: ListView.builder(
                 itemCount: _filtered.length,
@@ -124,7 +128,7 @@ class _LibraryImportScreenState extends State<LibraryImportScreen> {
                       errorWidget: (_, __, ___) => const Icon(Icons.broken_image),
                     ),
                     title: Text(name),
-                    subtitle: Text('SteamID: $appid'),
+                    subtitle: Text('${loc.steamIdLabel}: $appid'),
                     onTap: () {
                       Navigator.push(
                         context,

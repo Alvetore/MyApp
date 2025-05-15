@@ -31,5 +31,12 @@
   "measurement_steamid": "SteamID",
   "measurement_profile": "Профиль настроек",
   "measurement_fps": "FPS",
-  "measurement_comment": "Комментарий"
+  "measurement_comment": "Комментарий",
+  "libraryTitle": "Моя библиотека",
+  "libraryNotImported": "Библиотека не импортирована",
+  "importInSettings": "Импортировать в настройках",
+  "searchGame": "Поиск игры",
+  "sorting": "Сортировка",
+  "sortOrder": "Порядок сортировки",
+  "steamIdLabel": "SteamID"
 }
