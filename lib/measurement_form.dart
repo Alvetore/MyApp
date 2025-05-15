@@ -3,10 +3,8 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'settings_screen.dart';
 import 'services/sheet_service.dart';  // MeasurementRecord, DeviceSettingsScreen.prefsKey
 import 'services/api_service.dart';    // Measurement, ApiService
+import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 
-/// Форма добавления замера FPS
-/// При наличии сохранённых устройств показывает их, иначе полный список;
-/// Если передан presetSteamId, поле SteamID скрыто и заполнено автоматически.
 class MeasurementForm extends StatefulWidget {
   final String device;
   final String? presetSteamId;
@@ -53,7 +51,6 @@ class _MeasurementFormState extends State<MeasurementForm> {
       final prefs = await SharedPreferences.getInstance();
       final saved = prefs.getStringList(DeviceSettingsScreen.prefsKey) ?? [];
 
-      // Устройства: из настроек, если есть, иначе с сервиса
       final devicesFromSvc = await svc.fetchDevices();
       final devices = (widget.presetSteamId != null && saved.isNotEmpty)
           ? saved
@@ -67,7 +64,6 @@ class _MeasurementFormState extends State<MeasurementForm> {
         _oss = oss;
         _profiles = profiles;
 
-        // Подставляем первые варианты по умолчанию, если ещё null
         _selectedDevice ??= _devices.isNotEmpty ? _devices.first : null;
         _selectedOs ??= _oss.isNotEmpty ? _oss.first : null;
         _selectedProfile ??= _profiles.isNotEmpty ? _profiles.first : null;
@@ -80,6 +76,7 @@ class _MeasurementFormState extends State<MeasurementForm> {
   }
 
   Future<void> _submit() async {
+    final loc = AppLocalizations.of(context)!;
     if (!_formKey.currentState!.validate()) return;
 
     setState(() {
@@ -87,10 +84,9 @@ class _MeasurementFormState extends State<MeasurementForm> {
       _error = null;
     });
 
-    final prefs    = await SharedPreferences.getInstance();
-    final userNick = prefs.getString('userNick') ?? 'Anonymous';
+    final prefs = await SharedPreferences.getInstance();
+    final userNick = prefs.getString('userNick') ?? loc.anonymous;
 
-    // 1) Создаём DTO для отправки
     final meas = Measurement(
       submittedBy:     userNick,
       device:          _selectedDevice!,
@@ -101,13 +97,11 @@ class _MeasurementFormState extends State<MeasurementForm> {
       comment:         _commentCtrl.text,
     );
 
-    // 2) Отправляем на сервер
     final success = await ApiService().sendMeasurement(meas);
 
     setState(() => _loading = false);
 
     if (success) {
-      // 3) Собираем именно MeasurementRecord (поля без 'os')
       final record = MeasurementRecord(
         steamId:         meas.steamId,
         device:          meas.device,
@@ -118,13 +112,11 @@ class _MeasurementFormState extends State<MeasurementForm> {
       );
 
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Замер успешно отправлен')),
+        SnackBar(content: Text(loc.measurementSent)),
       );
-
-      // 4) Возвращаем record родителю
       Navigator.pop<MeasurementRecord>(context, record);
     } else {
-      setState(() => _error = 'Не удалось отправить замер');
+      setState(() => _error = loc.measurementSendFailed);
     }
   }
 
@@ -138,10 +130,11 @@ class _MeasurementFormState extends State<MeasurementForm> {
 
   @override
   Widget build(BuildContext context) {
+    final loc = AppLocalizations.of(context)!;
     return Scaffold(
-      appBar: AppBar(title: const Text('Новый замер')),
+      appBar: AppBar(title: Text(loc.newMeasurement)),
       body: _error != null
-          ? Center(child: Text('Ошибка: $_error'))
+          ? Center(child: Text('${loc.error}: $_error'))
           : (_devices.isEmpty || _oss.isEmpty || _profiles.isEmpty)
           ? const Center(child: CircularProgressIndicator())
           : Padding(
@@ -150,11 +143,10 @@ class _MeasurementFormState extends State<MeasurementForm> {
           key: _formKey,
           child: ListView(
             children: [
-              //  Устройство (если несколько вариантов)
               if (_devices.length > 1) ...[
                 DropdownButtonFormField<String>(
                   value: _selectedDevice,
-                  decoration: const InputDecoration(labelText: 'Устройство'),
+                  decoration: InputDecoration(labelText: loc.device),
                   items: _devices
                       .map((d) => DropdownMenuItem(value: d, child: Text(d)))
                       .toList(),
@@ -163,68 +155,62 @@ class _MeasurementFormState extends State<MeasurementForm> {
                 const SizedBox(height: 12),
               ],
 
-              // ОС
               DropdownButtonFormField<String>(
                 value: _selectedOs,
-                decoration: const InputDecoration(labelText: 'OS'),
+                decoration: InputDecoration(labelText: loc.os),
                 items: _oss
                     .map((o) => DropdownMenuItem(value: o, child: Text(o)))
                     .toList(),
                 onChanged: (v) => setState(() => _selectedOs = v),
-                validator: (v) => v == null ? 'Выберите ОС' : null,
+                validator: (v) => v == null ? loc.chooseOs : null,
               ),
               const SizedBox(height: 12),
 
-              // Профиль
               DropdownButtonFormField<String>(
                 value: _selectedProfile,
-                decoration: const InputDecoration(labelText: 'Профиль'),
+                decoration: InputDecoration(labelText: loc.profile),
                 items: _profiles
                     .map((p) => DropdownMenuItem(value: p, child: Text(p)))
                     .toList(),
                 onChanged: (v) => setState(() => _selectedProfile = v),
-                validator: (v) => v == null ? 'Выберите профиль' : null,
+                validator: (v) => v == null ? loc.chooseProfile : null,
               ),
               const SizedBox(height: 12),
 
-              // SteamID
               if (widget.presetSteamId == null) ...[
                 TextFormField(
                   controller: _steamIdCtrl,
-                  decoration: const InputDecoration(labelText: 'SteamID'),
+                  decoration: InputDecoration(labelText: loc.steamId),
                   keyboardType: TextInputType.number,
-                  validator: (v) => v == null || v.isEmpty ? 'Введите SteamID' : null,
+                  validator: (v) => v == null || v.isEmpty ? loc.enterSteamId : null,
                 ),
                 const SizedBox(height: 12),
               ],
 
-              // FPS
               TextFormField(
                 controller: _fpsCtrl,
-                decoration: const InputDecoration(labelText: 'FPS'),
+                decoration: InputDecoration(labelText: loc.fps),
                 keyboardType: TextInputType.number,
                 validator: (v) {
                   final f = double.tryParse(v?.replaceAll(',', '.') ?? '');
-                  return f == null ? 'Неверное значение FPS' : null;
+                  return f == null ? loc.invalidFps : null;
                 },
               ),
               const SizedBox(height: 12),
 
-              // Комментарий
               TextFormField(
                 controller: _commentCtrl,
-                decoration: const InputDecoration(labelText: 'Комментарий (опционально)'),
+                decoration: InputDecoration(labelText: loc.commentOptional),
                 keyboardType: TextInputType.multiline,
                 maxLines: null,
               ),
               const SizedBox(height: 20),
 
-              // Отправка
               _loading
                   ? const Center(child: CircularProgressIndicator())
                   : ElevatedButton(
                 onPressed: _submit,
-                child: const Text('Отправить'),
+                child: Text(loc.send),
               ),
             ],
           ),

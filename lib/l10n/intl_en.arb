@@ -1,6 +1,6 @@
 {
   "@@locale": "en",
-  "app_title": "DeckFilter",
+  "app_title": "MyApp",
   "settings": "Settings",
   "theme": "App theme",
   "theme_light": "Light",
@@ -41,9 +41,6 @@
   "steamIdLabel": "SteamID",
   "searchTitle": "Search",
   "noGamesImported": "No games imported.",
-  "searchGame": "Search game",
-  "sorting": "Sorting",
-  "steamId": "SteamID",
   "errorPrefix": "Error",
   "noMeasurementsForGame": "No measurements for this game",
   "addMeasurementTooltip": "Add measurement",
@@ -53,5 +50,19 @@
   "user": "User",
   "comment": "Comment",
   "noComment": "No comment",
-  "measurementsCount": "{count, plural, =1{1 measurement} other{{count} measurements}}"
+  "measurementsCount": "{count, plural, =1{1 measurement} other{{count} measurements}}",
+  "newMeasurement": "New Measurement",
+  "os": "OS",
+  "profile": "Profile",
+  "steamId": "SteamID",
+  "commentOptional": "Comment (optional)",
+  "chooseOs": "Choose OS",
+  "chooseProfile": "Choose profile",
+  "enterSteamId": "Enter SteamID",
+  "invalidFps": "Invalid FPS value",
+  "send": "Send",
+  "measurementSent": "Measurement sent successfully",
+  "measurementSendFailed": "Failed to send measurement",
+  "error": "Error",
+  "anonymous": "Anonymous"
 }

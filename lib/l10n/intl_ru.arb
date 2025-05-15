@@ -1,6 +1,6 @@
 {
   "@@locale": "ru",
-  "app_title": "DeckFilter",
+  "app_title": "MyApp",
   "settings": "Настройки",
   "theme": "Тема приложения",
   "theme_light": "Светлая",
@@ -41,9 +41,6 @@
   "steamIdLabel": "SteamID",
   "searchTitle": "Поиск",
   "noGamesImported": "Библиотека не импортирована.",
-  "searchGame": "Поиск игры",
-  "sorting": "Сортировка",
-  "steamId": "SteamID",
   "errorPrefix": "Ошибка",
   "noMeasurementsForGame": "Нет данных для этой игры",
   "addMeasurementTooltip": "Новый замер",
@@ -53,5 +50,19 @@
   "user": "Пользователь",
   "comment": "Комментарий",
   "noComment": "Без комментариев",
-  "measurementsCount": "{count, plural, =1{1 замер} few{{count} замера} many{{count} замеров} other{{count} замера}}"
+  "measurementsCount": "{count, plural, =1{1 замер} few{{count} замера} many{{count} замеров} other{{count} замера}}",
+  "newMeasurement": "Новый замер",
+  "os": "ОС",
+  "profile": "Профиль",
+  "steamId": "SteamID",
+  "commentOptional": "Комментарий (опционально)",
+  "chooseOs": "Выберите ОС",
+  "chooseProfile": "Выберите профиль",
+  "enterSteamId": "Введите SteamID",
+  "invalidFps": "Неверное значение FPS",
+  "send": "Отправить",
+  "measurementSent": "Замер успешно отправлен",
+  "measurementSendFailed": "Не удалось отправить замер",
+  "error": "Ошибка",
+  "anonymous": "Anonymous"
 }

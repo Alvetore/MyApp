@@ -1,6 +1,6 @@
 {
-    "name": "deckfilter_clone",
-    "short_name": "deckfilter_clone",
+    "name": "myapp",
+    "short_name": "myapp",
     "start_url": ".",
     "display": "standalone",
     "background_color": "#0175C2",
