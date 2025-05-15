@@ -35,7 +35,6 @@ dependencies:
   xml: ^6.1.0
   shared_preferences: ^2.0.13
   cached_network_image: ^3.2.3
-  openid_client: 0.4.9
   url_launcher: ^6.1.7
   gsheets: ^0.4.2
 

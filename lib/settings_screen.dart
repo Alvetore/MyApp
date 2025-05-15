@@ -1,12 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'import_profile_screen.dart';
-import 'steam_login_screen.dart';
 import 'config.dart';
 import 'services/sheet_service.dart';
 
 /// Экран «Настройки» приложения
-/// Включает настройку темы, ника пользователя, импорт библиотеки (двумя способами),
+/// Включает настройку темы, ника пользователя, импорт библиотеки,
 /// очистку кэша и выбор устройств.
 class SettingsScreen extends StatefulWidget {
   const SettingsScreen({Key? key}) : super(key: key);
@@ -47,7 +46,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
     setState(() {
       _themeMode = mode;
       _nickController.text = storedNick;
-      themeNotifier.value = _themeMode;  // <-- топ-левел
+      themeNotifier.value = _themeMode;
     });
   }
 
@@ -68,42 +67,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
   void dispose() {
     _nickController.dispose();
     super.dispose();
-  }
-
-  /// Диалог выбора метода импорта библиотеки
-  void _showImportOptions() {
-    showDialog(
-      context: context,
-      builder: (context) => SimpleDialog(
-        title: const Text('Выберите метод импорта'),
-        children: [
-          SimpleDialogOption(
-            child: const Text('По ссылке на профиль Steam'),
-            onPressed: () {
-              Navigator.pop(context);
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (_) => const ImportProfileScreen(),
-                ),
-              );
-            },
-          ),
-          SimpleDialogOption(
-            child: const Text('Через Steam Login'),
-            onPressed: () {
-              Navigator.pop(context);
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (_) => const SteamLoginScreen(),
-                ),
-              );
-            },
-          ),
-        ],
-      ),
-    );
   }
 
   @override
@@ -130,28 +93,34 @@ class _SettingsScreenState extends State<SettingsScreen> {
             title: const Text('Светлая'),
             value: ThemeMode.light,
             groupValue: _themeMode,
-            onChanged: (v) => setState(() {
-              _themeMode = v!;
-              themeNotifier.value = _themeMode;
-            }),
+            onChanged: (v) {
+              setState(() {
+                _themeMode = v!;
+                themeNotifier.value = _themeMode;
+              });
+            },
           ),
           RadioListTile<ThemeMode>(
             title: const Text('Тёмная'),
             value: ThemeMode.dark,
             groupValue: _themeMode,
-            onChanged: (v) => setState(() {
-              _themeMode = v!;
-              themeNotifier.value = _themeMode;
-            }),
+            onChanged: (v) {
+              setState(() {
+                _themeMode = v!;
+                themeNotifier.value = _themeMode;
+              });
+            },
           ),
           RadioListTile<ThemeMode>(
             title: const Text('Системная'),
             value: ThemeMode.system,
             groupValue: _themeMode,
-            onChanged: (v) => setState(() {
-              _themeMode = v!;
-              themeNotifier.value = _themeMode;
-            }),
+            onChanged: (v) {
+              setState(() {
+                _themeMode = v!;
+                themeNotifier.value = _themeMode;
+              });
+            },
           ),
           const Divider(),
 
@@ -166,11 +135,18 @@ class _SettingsScreenState extends State<SettingsScreen> {
           const SizedBox(height: 16),
           const Divider(),
 
-          // Импорт библиотеки Steam
+          // Импорт библиотеки Steam (один вариант)
           ListTile(
             leading: const Icon(Icons.import_contacts),
             title: const Text('Импорт библиотеки Steam'),
-            onTap: _showImportOptions,
+            onTap: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (_) => const ImportProfileScreen(),
+                ),
+              );
+            },
           ),
           const Divider(),
 
@@ -189,14 +165,16 @@ class _SettingsScreenState extends State<SettingsScreen> {
           ),
           const Divider(),
 
-          // Выбор устройств
+          // Настройка устройств
           ListTile(
             leading: const Icon(Icons.devices),
             title: const Text('Настройка устройств'),
             onTap: () {
               Navigator.push(
                 context,
-                MaterialPageRoute(builder: (_) => const DeviceSettingsScreen()),
+                MaterialPageRoute(
+                  builder: (_) => DeviceSettingsScreen(),
+                ),
               );
             },
           ),
@@ -206,11 +184,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
   }
 }
 
-/// Экран выбора устройств
+/// Экран выбора устройств (сохранённые в SharedPreferences)
 class DeviceSettingsScreen extends StatelessWidget {
   static const prefsKey = 'selectedDevices';
-
-  const DeviceSettingsScreen({Key? key}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
@@ -224,13 +200,15 @@ class DeviceSettingsScreen extends StatelessWidget {
           }
           final devices = snap.data ?? [];
           return ListView(
-            children: devices
-                .map((d) => CheckboxListTile(
-              value: true,
-              title: Text(d),
-              onChanged: (_) {},
-            ))
-                .toList(),
+            children: devices.map((d) {
+              return CheckboxListTile(
+                value: true, // здесь логику отметки реализуйте по своему
+                title: Text(d),
+                onChanged: (v) {
+                  // сохранить изменения
+                },
+              );
+            }).toList(),
           );
         },
       ),
