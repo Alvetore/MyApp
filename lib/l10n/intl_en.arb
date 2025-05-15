@@ -64,5 +64,14 @@
   "measurementSent": "Measurement sent successfully",
   "measurementSendFailed": "Failed to send measurement",
   "error": "Error",
-  "anonymous": "Anonymous"
+  "anonymous": "Anonymous",
+  "save_done": "Settings saved",
+  "import_by_url": "By Steam profile link",
+  "settings_title": "Settings",
+  "save": "Save",
+  "cache_clear": "Clear cache",
+  "language": "App language",
+  "language_system": "System language",
+  "russian": "Russian",
+  "english": "English"
 }

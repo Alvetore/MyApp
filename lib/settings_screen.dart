@@ -5,6 +5,8 @@ import 'import_profile_screen.dart';
 import 'config.dart';
 import 'services/sheet_service.dart';
 
+// languageNotifier — глобальный ValueNotifier<String> из main.dart/config.dart
+
 class SettingsScreen extends StatefulWidget {
   const SettingsScreen({Key? key}) : super(key: key);
 
@@ -18,6 +20,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
   ThemeMode _themeMode = ThemeMode.dark;
   late TextEditingController _nickController;
+  String _selectedLanguage = 'system';
 
   @override
   void initState() {
@@ -30,6 +33,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
     final prefs = await SharedPreferences.getInstance();
     final storedTheme = prefs.getString(_themeKey);
     final storedNick = prefs.getString(_nickKey) ?? '';
+    final storedLang = prefs.getString('appLanguage') ?? 'system';
     ThemeMode mode;
     switch (storedTheme) {
       case 'light':
@@ -44,7 +48,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
     setState(() {
       _themeMode = mode;
       _nickController.text = storedNick;
+      _selectedLanguage = storedLang;
       themeNotifier.value = _themeMode;
+      languageNotifier.value = _selectedLanguage;
     });
   }
 
@@ -52,9 +58,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString(_themeKey, _themeMode.toString().split('.').last);
     await prefs.setString(_nickKey, _nickController.text.trim());
+    await prefs.setString('appLanguage', _selectedLanguage);
     if (!mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(AppLocalizations.of(context)!.save_done)),
+      SnackBar(content: Text(AppLocalizations.of(context)!.settings_saved)),
     );
   }
 
@@ -65,13 +72,14 @@ class _SettingsScreenState extends State<SettingsScreen> {
   }
 
   void _showImportOptions() {
+    final loc = AppLocalizations.of(context)!;
     showDialog(
       context: context,
       builder: (context) => SimpleDialog(
-        title: Text(AppLocalizations.of(context)!.import_steam),
+        title: Text(loc.import_steam),
         children: [
           SimpleDialogOption(
-            child: Text(AppLocalizations.of(context)!.import_by_url),
+            child: Text(loc.import_by_profile),
             onPressed: () {
               Navigator.pop(context);
               Navigator.push(
@@ -82,7 +90,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
               );
             },
           ),
-          // Если нужно добавить другие методы импорта, добавить тут
+          // Если появятся другие методы импорта — добавить тут
         ],
       ),
     );
@@ -93,18 +101,53 @@ class _SettingsScreenState extends State<SettingsScreen> {
     final loc = AppLocalizations.of(context)!;
     return Scaffold(
       appBar: AppBar(
-        title: Text(loc.settings_title),
+        title: Text(loc.settings),
         actions: [
           IconButton(
             icon: const Icon(Icons.save),
             onPressed: _saveSettings,
-            tooltip: loc.save,
+            tooltip: loc.save_settings,
           ),
         ],
       ),
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: [
+          // Ник пользователя
+          TextField(
+            controller: _nickController,
+            decoration: InputDecoration(
+              labelText: loc.user_nick,
+              helperText: loc.user_nick_helper,
+            ),
+          ),
+          const SizedBox(height: 16),
+          const Divider(),
+
+          // Импорт библиотеки Steam (выбор метода)
+          ListTile(
+            leading: const Icon(Icons.import_contacts),
+            title: Text(loc.import_steam_library),
+            onTap: _showImportOptions,
+          ),
+          const Divider(),
+
+          // Настройка устройств
+          ListTile(
+            leading: const Icon(Icons.devices),
+            title: Text(loc.device_settings),
+            onTap: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (_) => DeviceSettingsScreen(),
+                ),
+              );
+            },
+          ),
+          const Divider(),
+
+          // Тема приложения
           Text(
             loc.theme,
             style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
@@ -144,29 +187,59 @@ class _SettingsScreenState extends State<SettingsScreen> {
           ),
           const Divider(),
 
-          // Ник пользователя
-          TextField(
-            controller: _nickController,
-            decoration: InputDecoration(
-              labelText: loc.user_nick,
-              helperText: loc.user_nick,
-            ),
+          // Язык приложения
+          Text(
+            loc.language,
+            style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
           ),
-          const SizedBox(height: 16),
-          const Divider(),
-
-          // Импорт библиотеки Steam (выбор метода)
-          ListTile(
-            leading: const Icon(Icons.import_contacts),
-            title: Text(loc.import_steam),
-            onTap: _showImportOptions,
+          RadioListTile<String>(
+            title: Text(loc.language_system),
+            value: 'system',
+            groupValue: _selectedLanguage,
+            onChanged: (v) async {
+              if (v == null) return;
+              final prefs = await SharedPreferences.getInstance();
+              await prefs.setString('appLanguage', v);
+              setState(() {
+                _selectedLanguage = v;
+                languageNotifier.value = v;
+              });
+            },
+          ),
+          RadioListTile<String>(
+            title: Text('English'),
+            value: 'en',
+            groupValue: _selectedLanguage,
+            onChanged: (v) async {
+              if (v == null) return;
+              final prefs = await SharedPreferences.getInstance();
+              await prefs.setString('appLanguage', v);
+              setState(() {
+                _selectedLanguage = v;
+                languageNotifier.value = v;
+              });
+            },
+          ),
+          RadioListTile<String>(
+            title: Text('Русский'),
+            value: 'ru',
+            groupValue: _selectedLanguage,
+            onChanged: (v) async {
+              if (v == null) return;
+              final prefs = await SharedPreferences.getInstance();
+              await prefs.setString('appLanguage', v);
+              setState(() {
+                _selectedLanguage = v;
+                languageNotifier.value = v;
+              });
+            },
           ),
           const Divider(),
 
           // Очистка кэша
           ListTile(
             leading: const Icon(Icons.delete),
-            title: Text(loc.cache_clear),
+            title: Text(loc.clear_cache),
             onTap: () async {
               final prefs = await SharedPreferences.getInstance();
               await prefs.clear();
@@ -176,29 +249,13 @@ class _SettingsScreenState extends State<SettingsScreen> {
               );
             },
           ),
-          const Divider(),
-
-          // Настройка устройств
-          ListTile(
-            leading: const Icon(Icons.devices),
-            title: Text(loc.device_settings),
-            onTap: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (_) => DeviceSettingsScreen(),
-                ),
-              );
-            },
-          ),
         ],
       ),
     );
   }
 }
 
-// DeviceSettingsScreen — тут аналогично меняются тексты на локализованные
-
+// DeviceSettingsScreen — лейблы оставляем локализованными, остальное без изменений
 class DeviceSettingsScreen extends StatelessWidget {
   static const prefsKey = 'selectedDevices';
 

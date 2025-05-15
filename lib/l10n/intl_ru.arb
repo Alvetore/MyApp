@@ -64,5 +64,14 @@
   "measurementSent": "Замер успешно отправлен",
   "measurementSendFailed": "Не удалось отправить замер",
   "error": "Ошибка",
-  "anonymous": "Anonymous"
+  "anonymous": "Anonymous",
+  "save_done": "Настройки сохранены",
+  "import_by_url": "По ссылке на профиль Steam",
+  "settings_title": "Настройки",
+  "save": "Сохранить",
+  "cache_clear": "Очистить кэш",
+  "language": "Язык приложения",
+  "system": "Язык системы",
+  "russian": "Русский",
+  "english": "Английский"
 }

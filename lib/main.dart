@@ -1,12 +1,22 @@
 import 'package:flutter/material.dart';
-import 'config.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'config.dart'; // <-- тут уже должен быть languageNotifier!
 import 'library_import_screen.dart';
 import 'search_screen.dart';
 import 'settings_screen.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 
-void main() => runApp(const MyApp());
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+
+  // Загружаем выбранный язык из SharedPreferences (если не найден, используем system)
+  final prefs = await SharedPreferences.getInstance();
+  String lang = prefs.getString('appLanguage') ?? 'system';
+  languageNotifier.value = lang;
+
+  runApp(const MyApp());
+}
 
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
@@ -16,31 +26,45 @@ class MyApp extends StatelessWidget {
     return ValueListenableBuilder<ThemeMode>(
       valueListenable: themeNotifier,
       builder: (_, themeMode, __) {
-        return MaterialApp(
-          title: 'MyApp',
-          theme: ThemeData(
-            brightness: Brightness.light,
-            colorScheme: ColorScheme.fromSeed(seedColor: Colors.blue),
-          ),
-          darkTheme: ThemeData(
-            brightness: Brightness.dark,
-            colorScheme: ColorScheme.fromSeed(
-              seedColor: Colors.blue,
-              brightness: Brightness.dark,
-            ),
-          ),
-          localizationsDelegates: const [
-            AppLocalizations.delegate,
-            GlobalMaterialLocalizations.delegate,
-            GlobalWidgetsLocalizations.delegate,
-            GlobalCupertinoLocalizations.delegate,
-          ],
-          supportedLocales: const [
-            Locale('en', ''),
-            Locale('ru', ''),
-          ],
-          themeMode: themeMode,
-          home: const HomePage(),
+        return ValueListenableBuilder<String>(
+          valueListenable: languageNotifier,
+          builder: (context, lang, _) {
+            Locale? locale;
+            if (lang == 'ru') {
+              locale = const Locale('ru');
+            } else if (lang == 'en') {
+              locale = const Locale('en');
+            } else {
+              locale = null; // system
+            }
+            return MaterialApp(
+              title: 'MyApp',
+              theme: ThemeData(
+                brightness: Brightness.light,
+                colorScheme: ColorScheme.fromSeed(seedColor: Colors.blue),
+              ),
+              darkTheme: ThemeData(
+                brightness: Brightness.dark,
+                colorScheme: ColorScheme.fromSeed(
+                  seedColor: Colors.blue,
+                  brightness: Brightness.dark,
+                ),
+              ),
+              localizationsDelegates: const [
+                AppLocalizations.delegate,
+                GlobalMaterialLocalizations.delegate,
+                GlobalWidgetsLocalizations.delegate,
+                GlobalCupertinoLocalizations.delegate,
+              ],
+              supportedLocales: const [
+                Locale('en', ''),
+                Locale('ru', ''),
+              ],
+              locale: locale, // <-- вот это важно
+              themeMode: themeMode,
+              home: const HomePage(),
+            );
+          },
         );
       },
     );
@@ -58,9 +82,9 @@ class _HomePageState extends State<HomePage> {
   int _selectedIndex = 0;
 
   static const List<Widget> _pages = <Widget>[
-    LibraryImportScreen(), // «Библиотека»
-    SearchScreen(),        // «Поиск»
-    SettingsScreen(),      // «Настройки»
+    LibraryImportScreen(),
+    SearchScreen(),
+    SettingsScreen(),
   ];
 
   void _onItemTapped(int index) {
@@ -72,6 +96,8 @@ class _HomePageState extends State<HomePage> {
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    final loc = AppLocalizations.of(context)!;
+
     return Scaffold(
       body: _pages[_selectedIndex],
       bottomNavigationBar: BottomNavigationBar(
@@ -79,18 +105,18 @@ class _HomePageState extends State<HomePage> {
         onTap: _onItemTapped,
         selectedItemColor: isDark ? Colors.white : Colors.black,
         unselectedItemColor: isDark ? Colors.white60 : Colors.black54,
-        items: const [
+        items: [
           BottomNavigationBarItem(
-            icon: Icon(Icons.library_books),
-            label: 'Библиотека',
+            icon: const Icon(Icons.library_books),
+            label: loc.libraryTitle,
           ),
           BottomNavigationBarItem(
-            icon: Icon(Icons.search),
-            label: 'Поиск',
+            icon: const Icon(Icons.search),
+            label: loc.searchTitle,
           ),
           BottomNavigationBarItem(
-            icon: Icon(Icons.settings),
-            label: 'Настройки',
+            icon: const Icon(Icons.settings),
+            label: loc.settings,
           ),
         ],
       ),
