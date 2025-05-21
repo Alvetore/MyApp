@@ -3,7 +3,6 @@ import 'package:http/http.dart' as http;
 import 'package:csv/csv.dart';
 import '../config.dart';
 
-/// Запись одного замера из таблицы Measurements
 class MeasurementRecord {
   final String submittedBy;
   final String device;
@@ -23,12 +22,21 @@ class MeasurementRecord {
 }
 
 class SheetService {
-  // CSV‐ссылки на листы (список устройств, ОС и профилей не меняются)
-  final _devicesUrl = devicesCsvUrl;
-  final _osUrl      = osCsvUrl;
-  final _profilesUrl = profilesCsvUrl;
+  // Ссылки на служебные листы
+  final _devicesUrl   = devicesCsvUrl;
+  final _osUrl        = osCsvUrl;
+  final _profilesUrl  = profilesCsvUrl;
 
-  /// Внутренний метод: загружает CSV и возвращает список строк первого столбца
+  // Получить список устройств
+  Future<List<String>> fetchDevices() => _fetchList(_devicesUrl);
+
+  // Получить список ОС
+  Future<List<String>> fetchOperatingSystems() => _fetchList(_osUrl);
+
+  // Получить список профилей графики
+  Future<List<String>> fetchSettingsProfiles() => _fetchList(_profilesUrl);
+
+  // Универсальный загрузчик для простых листов
   Future<List<String>> _fetchList(String url) async {
     final res = await http.get(Uri.parse(url));
     if (res.statusCode != 200) {
@@ -39,19 +47,9 @@ class SheetService {
     return rows.skip(1).map((r) => r[0].toString()).toList();
   }
 
-  /// Получить список устройств
-  Future<List<String>> fetchDevices() => _fetchList(_devicesUrl);
-
-  /// Получить список ОС
-  Future<List<String>> fetchOperatingSystems() => _fetchList(_osUrl);
-
-  /// Получить список профилей графики
-  Future<List<String>> fetchSettingsProfiles() =>
-      _fetchList(_profilesUrl);
-
   /// Загрузить замеры с листа для конкретного устройства
   Future<List<MeasurementRecord>> fetchMeasurementsForDevice(String deviceName) async {
-    final sheetId = '<ТВОЙ_SHEET_ID>'; // Лучше вынести в config.dart
+    // Используем sheetId из config.dart!
     final url =
         'https://docs.google.com/spreadsheets/d/$sheetId/gviz/tq?tqx=out:csv&sheet=${Uri.encodeComponent(deviceName)}';
 
@@ -66,7 +64,6 @@ class SheetService {
     if (rows.isEmpty) return [];
 
     final header = rows.first.map((e) => e.toString()).toList();
-
     final idxSubmittedBy = header.indexOf('SubmittedBy');
     final idxDevice = header.indexOf('Device');
     final idxSteamId = header.indexOf('SteamID');

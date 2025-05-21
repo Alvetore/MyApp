@@ -31,7 +31,7 @@ class _CompatibilityDetailsByGameState extends State<CompatibilityDetailsByGame>
     _loadData();
   }
 
-  /// Загружает данные замеров из сервиса и обновляет состояние
+  /// Загружает данные замеров из всех устройств (листов) и группирует
   Future<void> _loadData() async {
     setState(() {
       _loading = true;
@@ -41,15 +41,26 @@ class _CompatibilityDetailsByGameState extends State<CompatibilityDetailsByGame>
       final prefs = await SharedPreferences.getInstance();
       final savedDevices = prefs.getStringList(DeviceSettingsScreen.prefsKey) ?? [];
 
-      final allRecords = await _svc.fetchMeasurements();
-      final records = allRecords.where((r) => r.steamId == widget.steamId).toList();
+      // Если ничего не выбрано — подтянуть все доступные устройства (по умолчанию)
+      List<String> devices = savedDevices;
+      if (devices.isEmpty) {
+        devices = await _svc.fetchDevices();
+      }
 
-      final devices = savedDevices.isNotEmpty
-          ? savedDevices
-          : records.map((r) => r.device).toSet().toList();
+      // Параллельно загружаем замеры по каждому устройству
+      final allRecords = <MeasurementRecord>[];
+      for (final device in devices) {
+        try {
+          final records = await _svc.fetchMeasurementsForDevice(device);
+          allRecords.addAll(records.where((r) => r.steamId == widget.steamId));
+        } catch (e) {
+          // Если не удалось получить с устройства — просто скипаем (например, если лист пустой)
+        }
+      }
 
+      // Группируем по устройству и профилю
       final data = <String, Map<String, List<MeasurementRecord>>>{};
-      for (final r in records) {
+      for (final r in allRecords) {
         if (!devices.contains(r.device)) continue;
         data.putIfAbsent(r.device, () => {});
         data[r.device]!.putIfAbsent(r.settingsProfile, () => []).add(r);
@@ -101,9 +112,7 @@ class _CompatibilityDetailsByGameState extends State<CompatibilityDetailsByGame>
               final avgFps = list.map((e) => e.fps).reduce((a, b) => a + b) / count;
               return ListTile(
                 title: Text('$profile — ${avgFps.toStringAsFixed(1)} ${loc.fps}'),
-                subtitle: Text(
-                    loc.measurementsCount(count)
-                ),
+                subtitle: Text(loc.measurementsCount(count)),
                 onTap: () {
                   Navigator.push(
                     context,
@@ -130,7 +139,6 @@ class _CompatibilityDetailsByGameState extends State<CompatibilityDetailsByGame>
     final device = savedDevices.isNotEmpty ? savedDevices.first : null;
     if (device == null) return;
 
-    // Открываем MeasurementForm и ждём новый MeasurementRecord
     final newRecord = await Navigator.push<MeasurementRecord>(
       context,
       MaterialPageRoute(
@@ -142,7 +150,6 @@ class _CompatibilityDetailsByGameState extends State<CompatibilityDetailsByGame>
     );
 
     if (newRecord != null) {
-      // Мгновенно добавляем запись в локальную карту данных
       setState(() {
         _data.putIfAbsent(newRecord.device, () => {});
         final profiles = _data[newRecord.device]!;
