@@ -61,7 +61,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
   Future<void> _saveNick(String nick) async {
     final prefs = await SharedPreferences.getInstance();
-    await prefs.setString(_nickKey, nick.trim());
+    // Если пусто — сохраняем Anonymous
+    String finalNick = nick.trim().isEmpty ? 'Anonymous' : nick.trim();
+    await prefs.setString(_nickKey, finalNick);
   }
 
   @override

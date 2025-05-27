@@ -85,7 +85,8 @@ class _MeasurementFormState extends State<MeasurementForm> {
     });
 
     final prefs = await SharedPreferences.getInstance();
-    final userNick = prefs.getString('userNick') ?? loc.anonymous;
+    String userNick = prefs.getString('userNick') ?? '';
+    if (userNick.trim().isEmpty) userNick = 'Anonymous';
 
     final meas = Measurement(
       submittedBy:     userNick,
@@ -95,6 +96,7 @@ class _MeasurementFormState extends State<MeasurementForm> {
       settingsProfile: _selectedProfile!,
       fps:             double.parse(_fpsCtrl.text.replaceAll(',', '.')),
       comment:         _commentCtrl.text,
+      sheet: _selectedDevice!,
     );
 
     final success = await ApiService().sendMeasurement(meas);
@@ -118,6 +120,7 @@ class _MeasurementFormState extends State<MeasurementForm> {
     } else {
       setState(() => _error = loc.measurementSendFailed);
     }
+
   }
 
   @override

@@ -11,6 +11,7 @@ class Measurement {
   final String settingsProfile;
   final double fps;
   final String comment;
+  final String sheet;
 
   Measurement({
     required this.submittedBy,
@@ -20,6 +21,7 @@ class Measurement {
     required this.settingsProfile,
     required this.fps,
     required this.comment,
+    required this.sheet,
   });
 
   Map<String, dynamic> toJson() {
@@ -31,7 +33,7 @@ class Measurement {
       'SettingsProfile': settingsProfile,
       'FPS': fps,
       'Comment': comment,
-      'sheetName': device,
+      'Sheet': sheet,
     };
   }
 }
@@ -43,6 +45,8 @@ class ApiService {
 
   Future<bool> sendMeasurement(Measurement m) async {
     final body = m.toJson();
+    print('POST MEASUREMENT: ' + jsonEncode(body));  // <-- дебаг тут
+
     late http.Response res;
     try {
       res = await http.post(
@@ -54,7 +58,10 @@ class ApiService {
       debugPrint('Error sending measurement: $e');
       return false;
     }
-    // Любые коды 2xx и 3xx считаем успехом из-за редиректа
+
+    print('RESPONSE: ${res.statusCode}');
+    print('BODY: ${res.body}'); // <-- дебаг тут
+
     if (res.statusCode >= 200 && res.statusCode < 400) {
       return true;
     } else {
@@ -62,4 +69,5 @@ class ApiService {
       return false;
     }
   }
+
 }
