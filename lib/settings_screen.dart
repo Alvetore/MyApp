@@ -256,34 +256,63 @@ class _SettingsScreenState extends State<SettingsScreen> {
 }
 
 // DeviceSettingsScreen — лейблы оставляем локализованными, остальное без изменений
-class DeviceSettingsScreen extends StatelessWidget {
+class DeviceSettingsScreen extends StatefulWidget {
   static const prefsKey = 'selectedDevices';
+
+  @override
+  State<DeviceSettingsScreen> createState() => _DeviceSettingsScreenState();
+}
+
+class _DeviceSettingsScreenState extends State<DeviceSettingsScreen> {
+  List<String> _devices = [];
+  Set<String> _selectedDevices = {};
+
+  @override
+  void initState() {
+    super.initState();
+    _load();
+  }
+
+  Future<void> _load() async {
+    final prefs = await SharedPreferences.getInstance();
+    final svc = SheetService();
+    final devices = await svc.fetchDevices();
+    final saved = prefs.getStringList(DeviceSettingsScreen.prefsKey) ?? devices;
+    setState(() {
+      _devices = devices;
+      _selectedDevices = saved.toSet();
+    });
+  }
+
+  Future<void> _onChanged(bool? checked, String device) async {
+    setState(() {
+      if (checked == true) {
+        _selectedDevices.add(device);
+      } else {
+        _selectedDevices.remove(device);
+      }
+    });
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setStringList(DeviceSettingsScreen.prefsKey, _selectedDevices.toList());
+  }
 
   @override
   Widget build(BuildContext context) {
     final loc = AppLocalizations.of(context)!;
     return Scaffold(
       appBar: AppBar(title: Text(loc.device_settings)),
-      body: FutureBuilder<List<String>>(
-        future: SheetService().fetchDevices(),
-        builder: (context, snap) {
-          if (snap.connectionState != ConnectionState.done) {
-            return const Center(child: CircularProgressIndicator());
-          }
-          final devices = snap.data ?? [];
-          return ListView(
-            children: devices.map((d) {
-              return CheckboxListTile(
-                value: true, // здесь логику отметки реализуйте по своему
-                title: Text(d),
-                onChanged: (v) {
-                  // сохранить изменения
-                },
-              );
-            }).toList(),
+      body: _devices.isEmpty
+          ? const Center(child: CircularProgressIndicator())
+          : ListView(
+        children: _devices.map((d) {
+          return CheckboxListTile(
+            value: _selectedDevices.contains(d),
+            title: Text(d),
+            onChanged: (v) => _onChanged(v, d),
           );
-        },
+        }).toList(),
       ),
     );
   }
 }
+
