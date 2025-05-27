@@ -52,18 +52,37 @@ class SheetService {
     // Используем sheetId из config.dart!
     final url =
         'https://docs.google.com/spreadsheets/d/$sheetId/gviz/tq?tqx=out:csv&sheet=${Uri.encodeComponent(deviceName)}';
-
+    print('Загружаю CSV для устройства: $deviceName\nURL: $url');
     final res = await http.get(Uri.parse(url));
     if (res.statusCode != 200) {
       throw Exception('Failed to load measurements for $deviceName (status ${res.statusCode})');
     }
 
     final csvString = utf8.decode(res.bodyBytes);
-    final rows = const CsvToListConverter().convert(csvString);
+    print('DEBUG: CSV raw:\n$csvString');
+
+// 1. Явно определяем разделитель строк (eol)
+// 2. Убираем BOM, если он есть
+    final cleaned = csvString.replaceAll('\ufeff', ''); // убираем BOM если был
+    final csvNormalized = cleaned.replaceAll('\r\n', '\n').replaceAll('\r', '\n');
+
+// 3. Парсим с правильным eol и настройками
+    final rows = const CsvToListConverter(
+      eol: '\n', // ЯВНО, чтобы даже если где-то смесь переносов, было корректно
+      fieldDelimiter: ',', // по умолчанию, но можно явно указать
+      shouldParseNumbers: false, // нам не нужно преобразование в числа автоматически
+    ).convert(csvNormalized);
+
+    print('DEBUG: Parsed ${rows.length} rows');
+    for (int i = 0; i < rows.length; i++) {
+      print('ROW[$i]: ${rows[i]}');
+    }
+
+
 
     if (rows.isEmpty) return [];
 
-    final header = rows.first.map((e) => e.toString()).toList();
+    final header = rows.first.map((e) => e.toString().replaceAll('"', '')).toList();
     final idxSubmittedBy = header.indexOf('SubmittedBy');
     final idxDevice = header.indexOf('Device');
     final idxSteamId = header.indexOf('SteamID');

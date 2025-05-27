@@ -31,6 +31,7 @@ class Measurement {
       'SettingsProfile': settingsProfile,
       'FPS': fps,
       'Comment': comment,
+      'sheetName': device,
     };
   }
 }

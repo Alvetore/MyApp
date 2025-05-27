@@ -14,6 +14,7 @@ class ImportProfileScreen extends StatefulWidget {
 }
 
 class _ImportProfileScreenState extends State<ImportProfileScreen> {
+  String? _steamNick;
   final TextEditingController _profileCtrl = TextEditingController();
   bool _loading = false;
   String? _error;
@@ -49,6 +50,7 @@ class _ImportProfileScreenState extends State<ImportProfileScreen> {
       await prefs.setString('importedGames', jsonEncode(parsed));
       await prefs.setString('lastImportProfile', input); // Запомнили последний профиль
       await prefs.setString('lastImportTime', DateTime.now().toIso8601String());
+      await prefs.setString('importedSteamNick', _steamNick ?? '');
       if (!mounted) return;
       Navigator.pop(context, true);
     } catch (e) {

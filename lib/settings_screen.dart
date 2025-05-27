@@ -17,6 +17,7 @@ class SettingsScreen extends StatefulWidget {
 class _SettingsScreenState extends State<SettingsScreen> {
   static const _themeKey = 'themeMode';
   static const _nickKey = 'userNick';
+  static const _steamNickKey = 'importedSteamNick';
 
   ThemeMode _themeMode = ThemeMode.dark;
   late TextEditingController _nickController;
@@ -33,7 +34,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
     final prefs = await SharedPreferences.getInstance();
     final storedTheme = prefs.getString(_themeKey);
     final storedNick = prefs.getString(_nickKey) ?? '';
+    final steamNick = prefs.getString(_steamNickKey) ?? '';
     final storedLang = prefs.getString('appLanguage') ?? 'system';
+
     ThemeMode mode;
     switch (storedTheme) {
       case 'light':
@@ -45,24 +48,20 @@ class _SettingsScreenState extends State<SettingsScreen> {
       default:
         mode = ThemeMode.dark;
     }
+
     setState(() {
       _themeMode = mode;
-      _nickController.text = storedNick;
+      // Используем: пользовательский ник > ник из Steam > пусто
+      _nickController.text = storedNick.isNotEmpty ? storedNick : (steamNick.isNotEmpty ? steamNick : '');
       _selectedLanguage = storedLang;
       themeNotifier.value = _themeMode;
       languageNotifier.value = _selectedLanguage;
     });
   }
 
-  Future<void> _saveSettings() async {
+  Future<void> _saveNick(String nick) async {
     final prefs = await SharedPreferences.getInstance();
-    await prefs.setString(_themeKey, _themeMode.toString().split('.').last);
-    await prefs.setString(_nickKey, _nickController.text.trim());
-    await prefs.setString('appLanguage', _selectedLanguage);
-    if (!mounted) return;
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(AppLocalizations.of(context)!.settings_saved)),
-    );
+    await prefs.setString(_nickKey, nick.trim());
   }
 
   @override
@@ -90,7 +89,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
               );
             },
           ),
-          // Если появятся другие методы импорта — добавить тут
         ],
       ),
     );
@@ -102,13 +100,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
     return Scaffold(
       appBar: AppBar(
         title: Text(loc.settings),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.save),
-            onPressed: _saveSettings,
-            tooltip: loc.save_settings,
-          ),
-        ],
       ),
       body: ListView(
         padding: const EdgeInsets.all(16),
@@ -120,11 +111,19 @@ class _SettingsScreenState extends State<SettingsScreen> {
               labelText: loc.user_nick,
               helperText: loc.user_nick_helper,
             ),
+            onEditingComplete: () {
+              // Автоматическое сохранение
+              FocusScope.of(context).unfocus(); // скрываем клавиатуру
+              _saveNick(_nickController.text);
+            },
+            onSubmitted: (val) {
+              _saveNick(val);
+            },
           ),
           const SizedBox(height: 16),
           const Divider(),
 
-          // Импорт библиотеки Steam (выбор метода)
+          // Импорт библиотеки Steam
           ListTile(
             leading: const Icon(Icons.import_contacts),
             title: Text(loc.import_steam_library),
@@ -196,12 +195,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
             title: Text(loc.language_system),
             value: 'system',
             groupValue: _selectedLanguage,
-            onChanged: (v) async {
-              if (v == null) return;
-              final prefs = await SharedPreferences.getInstance();
-              await prefs.setString('appLanguage', v);
+            onChanged: (v) {
               setState(() {
-                _selectedLanguage = v;
+                _selectedLanguage = v!;
                 languageNotifier.value = v;
               });
             },
@@ -210,12 +206,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
             title: Text('English'),
             value: 'en',
             groupValue: _selectedLanguage,
-            onChanged: (v) async {
-              if (v == null) return;
-              final prefs = await SharedPreferences.getInstance();
-              await prefs.setString('appLanguage', v);
+            onChanged: (v) {
               setState(() {
-                _selectedLanguage = v;
+                _selectedLanguage = v!;
                 languageNotifier.value = v;
               });
             },
@@ -224,12 +217,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
             title: Text('Русский'),
             value: 'ru',
             groupValue: _selectedLanguage,
-            onChanged: (v) async {
-              if (v == null) return;
-              final prefs = await SharedPreferences.getInstance();
-              await prefs.setString('appLanguage', v);
+            onChanged: (v) {
               setState(() {
-                _selectedLanguage = v;
+                _selectedLanguage = v!;
                 languageNotifier.value = v;
               });
             },
@@ -247,6 +237,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
               ScaffoldMessenger.of(context).showSnackBar(
                 SnackBar(content: Text(loc.cache_cleared)),
               );
+              // После очистки настроек подгрузи их заново (чтобы не было пустого экрана)
+              _loadSettings();
             },
           ),
         ],
