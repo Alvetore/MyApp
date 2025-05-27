@@ -1,6 +1,6 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
     <application
-        android:label="deckfilter_clone"
+        android:label="myapp_clone"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher">
         <activity

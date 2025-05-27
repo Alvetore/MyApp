@@ -1,4 +1,4 @@
-package com.example.deckfilter_clone
+package com.example.myapp_clone
 
 import io.flutter.embedding.android.FlutterActivity
 
