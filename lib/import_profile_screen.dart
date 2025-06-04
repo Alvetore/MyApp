@@ -37,6 +37,7 @@ class _ImportProfileScreenState extends State<ImportProfileScreen> {
       final pr = await http.get(profileUrl);
       if (pr.statusCode != 200) throw loc.steam_profile_not_found;
       final docP = XmlDocument.parse(pr.body);
+      _steamNick = docP.findAllElements('steamID').first.text;
       final steamID = docP.findAllElements('steamID64').first.text;
       final gamesUrl = Uri.parse('https://steamcommunity.com/profiles/$steamID/games?xml=1');
       final gr = await http.get(gamesUrl);
@@ -50,7 +51,7 @@ class _ImportProfileScreenState extends State<ImportProfileScreen> {
       await prefs.setString('importedGames', jsonEncode(parsed));
       await prefs.setString('lastImportProfile', input); // Запомнили последний профиль
       await prefs.setString('lastImportTime', DateTime.now().toIso8601String());
-      await prefs.setString('importedSteamNick', _steamNick ?? '');
+      await prefs.setString('importedSteamNick', _steamNick!);
       if (!mounted) return;
       Navigator.pop(context, true);
     } catch (e) {
